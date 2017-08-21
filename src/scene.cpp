@@ -16,6 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <nori/octree.h>
 #include <nori/scene.h>
 #include <nori/bitmap.h>
 #include <nori/integrator.h>
@@ -26,7 +27,8 @@
 NORI_NAMESPACE_BEGIN
 
 Scene::Scene(const PropertyList &) {
-    m_accel = new Accel();
+	//m_accel = new Accel();
+	m_accel = new Octree();
 }
 
 Scene::~Scene() {

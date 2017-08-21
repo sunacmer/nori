@@ -65,6 +65,8 @@ namespace filesystem {
     class resolver;
 };
 
+using namespace std;
+
 NORI_NAMESPACE_BEGIN
 
 /* Forward declarations */

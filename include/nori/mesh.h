@@ -45,9 +45,11 @@ struct Intersection {
     Frame geoFrame;
     /// Pointer to the associated mesh
     const Mesh *mesh;
+	/// Triangle index of intersection
+	uint32_t idx;
 
     /// Create an uninitialized intersection record
-    Intersection() : mesh(nullptr) { }
+    Intersection() : mesh(nullptr), idx((uint32_t)-1) { }
 
     /// Transform a direction vector into the local shading frame
     Vector3f toLocal(const Vector3f &d) const {

@@ -28,13 +28,14 @@ void Accel::addMesh(Mesh *mesh) {
     m_bbox = m_mesh->getBoundingBox();
 }
 
-void Accel::build() {
-    /* Nothing to do here for now */
+void Accel::build()
+{
+	/* Nothing to do here for now */
 }
 
 bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) const {
     bool foundIntersection = false;  // Was an intersection found so far?
-    uint32_t f = (uint32_t) -1;      // Triangle index of the closest intersection
+    //uint32_t f = (uint32_t) -1;      // Triangle index of the closest intersection
 
     Ray3f ray(ray_); /// Make a copy of the ray (we will need to update its '.maxt' value)
 
@@ -49,7 +50,7 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
             ray.maxt = its.t = t;
             its.uv = Point2f(u, v);
             its.mesh = m_mesh;
-            f = idx;
+			its.idx = idx;
             foundIntersection = true;
         }
     }
@@ -74,7 +75,7 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
         const MatrixXu &F  = mesh->getIndices();
 
         /* Vertex indices of the triangle */
-        uint32_t idx0 = F(0, f), idx1 = F(1, f), idx2 = F(2, f);
+        uint32_t idx0 = F(0, its.idx), idx1 = F(1, its.idx), idx2 = F(2, its.idx);
 
         Point3f p0 = V.col(idx0), p1 = V.col(idx1), p2 = V.col(idx2);
 
