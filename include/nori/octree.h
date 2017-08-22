@@ -28,9 +28,10 @@ public:
 
 private:
 
+	int maxdepth;
 	OctNode* root;
 	void Destroy(OctNode* node);
-	void buildImpl(OctNode* node);
+	void buildImpl(OctNode* node, int depth);
 	void intersect(OctNode* node, const Ray3f &ray, Intersection &its, bool shadowRay) const;
 };
 

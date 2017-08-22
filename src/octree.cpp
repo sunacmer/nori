@@ -34,12 +34,14 @@ void Octree::build()
 	root->bbox = m_bbox;
 	root->triangles.resize(m_mesh->getTriangleCount());
 	iota(root->triangles.begin(), root->triangles.end(), 0);
-	buildImpl(root);
+	maxdepth = ceil(logf(m_mesh->getTriangleCount()) / logf(8.0f));
+	buildImpl(root, 0);
 }
 
-void Octree::buildImpl(OctNode* node)
+void Octree::buildImpl(OctNode* node, int depth)
 {
 	if (node == nullptr) return;
+	if (depth > maxdepth) return;
 	if (node->triangles.size() < 10) return;
 
 	Point3f min = node->bbox.min;
@@ -63,12 +65,12 @@ void Octree::buildImpl(OctNode* node)
 		{
 			if (node->children[j]->bbox.overlaps(box))
 			{
-				node->children[j]->triangles.push_back(node->triangles[i]); break;// 和多个node交叉的三角形只算到一个node里
+				node->children[j]->triangles.push_back(node->triangles[i]); // 和多个node交叉的三角形只算到一个node里会有漏一些三角形
 			}
 		}
 	}
 
-	for (int i = 0; i < 8; ++i) buildImpl(node->children[i]);
+	for (int i = 0; i < 8; ++i) buildImpl(node->children[i], depth+1);
 }
 
 void Octree::Destroy(OctNode* node)
