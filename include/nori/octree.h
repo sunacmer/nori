@@ -20,6 +20,8 @@ class Octree : public Accel
 {
 public:
 
+	static int count;
+
 	Octree();
 	~Octree();
 
@@ -28,10 +30,12 @@ public:
 
 private:
 
+	FILE* file;
 	OctNode* root;
+	void print(OctNode* node, FILE* file);
 	void Destroy(OctNode* node);
 	void buildImpl(OctNode* node);
-	bool intersect(OctNode* node, const Ray3f &ray, Intersection &its, bool shadowRay) const;
+	void intersect(OctNode* node, const Ray3f &ray, Intersection &its, bool shadowRay) const;
 };
 
 NORI_NAMESPACE_END

@@ -49,7 +49,7 @@ struct Intersection {
 	uint32_t idx;
 
     /// Create an uninitialized intersection record
-    Intersection() : mesh(nullptr), idx((uint32_t)-1) { }
+    Intersection() : mesh(nullptr), idx(0xffffffff) { }
 
     /// Transform a direction vector into the local shading frame
     Vector3f toLocal(const Vector3f &d) const {

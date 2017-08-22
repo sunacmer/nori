@@ -21,20 +21,26 @@ bool OctNode::isleaf() const
 
 Octree::Octree()
 {
+	file = fopen("intersect.txt", "w+");
 	root = new OctNode(m_bbox);
 }
 
 Octree::~Octree()
 {
+	fclose(file);
 	Destroy(root);
 }
 
 void Octree::build()
 {
+	root->bbox = m_bbox;
 	root->triangles.resize(m_mesh->getTriangleCount());
 	iota(root->triangles.begin(), root->triangles.end(), 0);
 	buildImpl(root);
 	cout << "octree build finish" << endl;
+	//FILE* f = fopen("d:/octree.txt", "w+");
+	//print(root, f);
+	//fclose(f);
 }
 
 void Octree::buildImpl(OctNode* node)
@@ -63,7 +69,7 @@ void Octree::buildImpl(OctNode* node)
 		{
 			if (node->children[j]->bbox.overlaps(box))
 			{
-				node->children[j]->triangles.push_back(i); continue;// TODO overlaps?
+				node->children[j]->triangles.push_back(node->triangles[i]);// TODO overlaps?
 			}
 		}
 	}
@@ -78,16 +84,15 @@ void Octree::Destroy(OctNode* node)
 	delete node;
 }
 
+int Octree::count = 0;
+
 bool Octree::rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const
 {
-	if (intersect(root, ray, its, shadowRay))
-	{
-		return true;
-	}
-	return false;// TODO intersection info
+	intersect(root, ray, its, shadowRay);
+	return (its.idx<0xffffffff);// TODO intersection info
 }
 
-bool Octree::intersect(OctNode* node, const Ray3f &ray_, Intersection &its, bool shadowRay) const
+void Octree::intersect(OctNode* node, const Ray3f &ray_, Intersection &its, bool shadowRay) const
 {
 	if (!node->bbox.rayIntersect(ray_)) return;
 	if (node->isleaf())
@@ -100,19 +105,72 @@ bool Octree::intersect(OctNode* node, const Ray3f &ray_, Intersection &its, bool
 			uint32_t idx = node->triangles[i];
 			if (m_mesh->rayIntersect(idx, ray, u, v, t))
 			{
-				if (shadowRay) return true;
+				if (shadowRay) return;
 				ray.maxt = its.t = t;
 				its.uv = Point2f(u, v);
 				its.mesh = m_mesh;
 				its.idx = idx;
 				flag = true;
+				//fprintf(file, "%u\n", idx);
+			}
+			if (flag)
+			{
+				Vector3f bary;
+				bary << 1 - its.uv.sum(), its.uv;
+
+				/* References to all relevant mesh buffers */
+				const Mesh *mesh = its.mesh;
+				const MatrixXf &V = mesh->getVertexPositions();
+				const MatrixXf &N = mesh->getVertexNormals();
+				const MatrixXf &UV = mesh->getVertexTexCoords();
+				const MatrixXu &F = mesh->getIndices();
+
+				/* Vertex indices of the triangle */
+				uint32_t idx0 = F(0, its.idx), idx1 = F(1, its.idx), idx2 = F(2, its.idx);
+
+				Point3f p0 = V.col(idx0), p1 = V.col(idx1), p2 = V.col(idx2);
+
+				/* Compute the intersection positon accurately using barycentric coordinates */
+				its.p = bary.x() * p0 + bary.y() * p1 + bary.z() * p2;
+
+				/* Compute proper texture coordinates if provided by the mesh */
+				if (UV.size() > 0)
+					its.uv = bary.x() * UV.col(idx0) + bary.y() * UV.col(idx1) + bary.z() * UV.col(idx2);
+
+				/* Compute the geometry frame */
+				its.geoFrame = Frame((p1 - p0).cross(p2 - p0).normalized());
+
+				if (N.size() > 0)
+				{
+					its.shFrame = Frame((bary.x() * N.col(idx0) + bary.y() * N.col(idx1) + bary.z() * N.col(idx2)).normalized());
+				}
+				else
+				{
+					its.shFrame = its.geoFrame;
+				}
 			}
 		}
-		return flag;
 	}
-	for (int i = 0; i < 8; ++i)
+	else
 	{
-		intersect(node->children[i], ray_, its, shadowRay);
+		for (int i = 0; i < 8; ++i)
+		{
+			intersect(node->children[i], ray_, its, shadowRay);
+		}
+	}
+}
+
+void Octree::print(OctNode* node, FILE* f)
+{
+	if (node == nullptr) return;
+	for (int i = 0; i < node->triangles.size(); ++i)
+	{
+		fprintf(f, "%u ", node->triangles[i]);
+	}
+	fprintf(f, "\n");
+	for (int i = 0; i < 8; i++)
+	{
+		print(node->children[i], f);
 	}
 }
 
