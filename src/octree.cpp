@@ -1,4 +1,4 @@
-#include <numeric>
+﻿#include <numeric>
 #include <nori/octree.h>
 
 NORI_NAMESPACE_BEGIN
@@ -21,13 +21,11 @@ bool OctNode::isleaf() const
 
 Octree::Octree()
 {
-	file = fopen("intersect.txt", "w+");
 	root = new OctNode(m_bbox);
 }
 
 Octree::~Octree()
 {
-	fclose(file);
 	Destroy(root);
 }
 
@@ -37,10 +35,6 @@ void Octree::build()
 	root->triangles.resize(m_mesh->getTriangleCount());
 	iota(root->triangles.begin(), root->triangles.end(), 0);
 	buildImpl(root);
-	cout << "octree build finish" << endl;
-	//FILE* f = fopen("d:/octree.txt", "w+");
-	//print(root, f);
-	//fclose(f);
 }
 
 void Octree::buildImpl(OctNode* node)
@@ -51,12 +45,12 @@ void Octree::buildImpl(OctNode* node)
 	Point3f min = node->bbox.min;
 	Point3f max = node->bbox.max;
 	Point3f center = node->bbox.getCenter();
-	// ǰ�벿��
+	// 前半部分
 	node->children[0] = new OctNode(BoundingBox3f(min, center));
 	node->children[1] = new OctNode(BoundingBox3f(Point3f(center.x(), min.y(), min.z()), Point3f(max.x(), center.y(), center.z())));
 	node->children[2] = new OctNode(BoundingBox3f(Point3f(center.x(), center.y(), min.z()), Point3f(max.x(), max.y(), center.z())));
 	node->children[3] = new OctNode(BoundingBox3f(Point3f(min.x(), center.y(), min.z()), Point3f(center.x(), max.y(), center.z())));
-	// ��벿��
+	// 后半部分
 	node->children[4] = new OctNode(BoundingBox3f(Point3f(min.x(), min.y(), center.z()), Point3f(center.x(), center.y(), max.z())));
 	node->children[5] = new OctNode(BoundingBox3f(Point3f(center.x(), min.y(), center.z()), Point3f(max.x(), center.y(), max.z())));
 	node->children[6] = new OctNode(BoundingBox3f(Point3f(center.x(), center.y(), center.z()), Point3f(max.x(), max.y(), max.z())));
@@ -69,7 +63,7 @@ void Octree::buildImpl(OctNode* node)
 		{
 			if (node->children[j]->bbox.overlaps(box))
 			{
-				node->children[j]->triangles.push_back(node->triangles[i]);// TODO overlaps?
+				node->children[j]->triangles.push_back(node->triangles[i]); break;// 和多个node交叉的三角形只算到一个node里
 			}
 		}
 	}
@@ -84,14 +78,13 @@ void Octree::Destroy(OctNode* node)
 	delete node;
 }
 
-int Octree::count = 0;
-
 bool Octree::rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const
 {
 	intersect(root, ray, its, shadowRay);
-	return (its.idx<0xffffffff);// TODO intersection info
+	return (its.idx<0xffffffff);
 }
 
+// 带返回值的递归函数
 void Octree::intersect(OctNode* node, const Ray3f &ray_, Intersection &its, bool shadowRay) const
 {
 	if (!node->bbox.rayIntersect(ray_)) return;
@@ -111,7 +104,6 @@ void Octree::intersect(OctNode* node, const Ray3f &ray_, Intersection &its, bool
 				its.mesh = m_mesh;
 				its.idx = idx;
 				flag = true;
-				//fprintf(file, "%u\n", idx);
 			}
 			if (flag)
 			{
@@ -157,20 +149,6 @@ void Octree::intersect(OctNode* node, const Ray3f &ray_, Intersection &its, bool
 		{
 			intersect(node->children[i], ray_, its, shadowRay);
 		}
-	}
-}
-
-void Octree::print(OctNode* node, FILE* f)
-{
-	if (node == nullptr) return;
-	for (int i = 0; i < node->triangles.size(); ++i)
-	{
-		fprintf(f, "%u ", node->triangles[i]);
-	}
-	fprintf(f, "\n");
-	for (int i = 0; i < 8; i++)
-	{
-		print(node->children[i], f);
 	}
 }
 
