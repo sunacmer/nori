@@ -70,6 +70,8 @@ public:
 protected:
     Mesh         *m_mesh = nullptr; ///< Mesh (only a single one for now)
     BoundingBox3f m_bbox;           ///< Bounding box of the entire scene
+
+	void CalcIntersectionInfo(Intersection& its) const;
 };
 
 NORI_NAMESPACE_END

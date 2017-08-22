@@ -81,7 +81,7 @@ void Octree::Destroy(OctNode* node)
 bool Octree::rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const
 {
 	intersect(root, ray, its, shadowRay);
-	return (its.idx<0xffffffff);
+	return (its.idx < 0xffffffff);
 }
 
 // 带返回值的递归函数
@@ -98,50 +98,15 @@ void Octree::intersect(OctNode* node, const Ray3f &ray_, Intersection &its, bool
 			uint32_t idx = node->triangles[i];
 			if (m_mesh->rayIntersect(idx, ray, u, v, t))
 			{
-				if (shadowRay) return;
 				ray.maxt = its.t = t;
 				its.uv = Point2f(u, v);
 				its.mesh = m_mesh;
 				its.idx = idx;
 				flag = true;
-			}
-			if (flag)
-			{
-				Vector3f bary;
-				bary << 1 - its.uv.sum(), its.uv;
-
-				/* References to all relevant mesh buffers */
-				const Mesh *mesh = its.mesh;
-				const MatrixXf &V = mesh->getVertexPositions();
-				const MatrixXf &N = mesh->getVertexNormals();
-				const MatrixXf &UV = mesh->getVertexTexCoords();
-				const MatrixXu &F = mesh->getIndices();
-
-				/* Vertex indices of the triangle */
-				uint32_t idx0 = F(0, its.idx), idx1 = F(1, its.idx), idx2 = F(2, its.idx);
-
-				Point3f p0 = V.col(idx0), p1 = V.col(idx1), p2 = V.col(idx2);
-
-				/* Compute the intersection positon accurately using barycentric coordinates */
-				its.p = bary.x() * p0 + bary.y() * p1 + bary.z() * p2;
-
-				/* Compute proper texture coordinates if provided by the mesh */
-				if (UV.size() > 0)
-					its.uv = bary.x() * UV.col(idx0) + bary.y() * UV.col(idx1) + bary.z() * UV.col(idx2);
-
-				/* Compute the geometry frame */
-				its.geoFrame = Frame((p1 - p0).cross(p2 - p0).normalized());
-
-				if (N.size() > 0)
-				{
-					its.shFrame = Frame((bary.x() * N.col(idx0) + bary.y() * N.col(idx1) + bary.z() * N.col(idx2)).normalized());
-				}
-				else
-				{
-					its.shFrame = its.geoFrame;
-				}
+				if (shadowRay) return;// 用its.idx < 0xffffffff判断是否相交 所以把这句从原代码中移下来
 			}
 		}
+		if (flag) CalcIntersectionInfo(its);// 访问its的数据ajax慢10ms??
 	}
 	else
 	{
