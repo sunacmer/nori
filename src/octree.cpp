@@ -58,6 +58,8 @@ void Octree::buildImpl(OctNode* node, int depth)
 	node->children[6] = new OctNode(BoundingBox3f(Point3f(center.x(), center.y(), center.z()), Point3f(max.x(), max.y(), max.z())));
 	node->children[7] = new OctNode(BoundingBox3f(Point3f(min.x(), center.y(), center.z()), Point3f(center.x(), max.y(), max.z())));
 
+	// 同一个三角形被分在多个节点中
+	// accel中的brute同一条ray会多余计算多个三角形 同一个三角形会被不同ray计算
 	for (uint32_t i = 0; i < node->triangles.size(); ++i)
 	{
 		const BoundingBox3f box = m_mesh->getBoundingBox(node->triangles[i]);
@@ -111,6 +113,7 @@ void Octree::intersect(OctNode* node, Ray3f &ray, Intersection &its, bool shadow
 	}
 	else
 	{
+		// TODO 貌似从大到小排列更快 对节点中的三角形按照距离排序优化时间
 		for (int i = 0; i < 8; ++i)
 		{
 			intersect(node->children[i], ray, its, shadowRay);
