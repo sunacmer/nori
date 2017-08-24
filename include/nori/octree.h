@@ -32,7 +32,7 @@ private:
 	OctNode* root;
 	void Destroy(OctNode* node);
 	void buildImpl(OctNode* node, int depth);
-	void intersect(OctNode* node, const Ray3f &ray, Intersection &its, bool shadowRay) const;
+	void intersect(OctNode* node, Ray3f &ray, Intersection &its, bool shadowRay) const;
 };
 
 NORI_NAMESPACE_END

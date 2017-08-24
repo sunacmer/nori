@@ -82,17 +82,16 @@ void Octree::Destroy(OctNode* node)
 
 bool Octree::rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const
 {
-	intersect(root, ray, its, shadowRay);
+	intersect(root, Ray3f(ray), its, shadowRay);
 	return (its.idx < 0xffffffff);
 }
 
 // 带返回值的递归函数
-void Octree::intersect(OctNode* node, const Ray3f &ray_, Intersection &its, bool shadowRay) const
+void Octree::intersect(OctNode* node, Ray3f &ray, Intersection &its, bool shadowRay) const
 {
-	if (!node->bbox.rayIntersect(ray_)) return;
+	if (!node->bbox.rayIntersect(ray)) return;
 	if (node->isleaf())
 	{
-		Ray3f ray(ray_);
 		bool flag = false;
 		for (uint32_t i = 0; i < node->triangles.size(); ++i)
 		{
@@ -114,7 +113,7 @@ void Octree::intersect(OctNode* node, const Ray3f &ray_, Intersection &its, bool
 	{
 		for (int i = 0; i < 8; ++i)
 		{
-			intersect(node->children[i], ray_, its, shadowRay);
+			intersect(node->children[i], ray, its, shadowRay);
 		}
 	}
 }
