@@ -32,6 +32,8 @@ public:
     /// Probability density of \ref squareToUniformSquare()
     static float squareToUniformSquarePdf(const Point2f &p);
 
+	static float intervalToTent(float sample);
+
     /// Sample a 2D tent distribution
     static Point2f squareToTent(const Point2f &sample);
 
