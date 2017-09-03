@@ -38,6 +38,24 @@ void Mesh::activate() {
         m_bsdf = static_cast<BSDF *>(
             NoriObjectFactory::createInstance("diffuse", PropertyList()));
     }
+
+    // 根据三角形面积大小建立discrete probability distribution
+    for(uint32_t i = 0; i < getTriangleCount(); ++i) dpdf.append(surfaceArea(i));
+}
+
+void Mesh::samplePosition(const Point2f &sample, Point3f &p, Normal3f &n) const
+{
+    float eta1 = sample.x();
+    float eta2 = sample.y();
+    int index = dpdf.sample(eta1);
+
+    uint32_t i0 = m_F(0, index), i1 = m_F(1, index), i2 = m_F(2, index);
+    const Point3f p0 = m_V.col(i0), p1 = m_V.col(i1), p2 = m_V.col(i2);
+
+    float alpha = 1.0f-sqrtf(1.0f-eta1);
+    float beta = eta2*sqrtf(1.0f-eta1);
+    p = alpha*p0+beta*p1+(1.0f-alpha-beta)*p2;
+    n = Vector3f((p1 - p0).cross(p2 - p0)).norm();
 }
 
 float Mesh::surfaceArea(uint32_t index) const {

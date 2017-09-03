@@ -21,6 +21,7 @@
 #include <nori/object.h>
 #include <nori/frame.h>
 #include <nori/bbox.h>
+#include <nori/dpdf.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -176,6 +177,8 @@ protected:
     Mesh();
 
 protected:
+
+    DiscretePDF dpdf;
     std::string m_name;                  ///< Identifying name
     MatrixXf      m_V;                   ///< Vertex positions
     MatrixXf      m_N;                   ///< Vertex normals

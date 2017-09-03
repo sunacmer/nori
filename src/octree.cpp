@@ -11,7 +11,8 @@ OctNode::OctNode(const BoundingBox3f& box)
 
 OctNode::~OctNode()
 {
-	triangles.swap(vector<uint32_t>());
+	vector<uint32_t> tmp;
+	triangles.swap(tmp);
 }
 
 bool OctNode::isleaf() const
@@ -84,7 +85,8 @@ void Octree::Destroy(OctNode* node)
 
 bool Octree::rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const
 {
-	intersect(root, Ray3f(ray), its, shadowRay);
+	Ray3f r = Ray3f(ray);
+	intersect(root, r, its, shadowRay);
 	return (its.idx < 0xffffffff);
 }
 
