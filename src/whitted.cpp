@@ -5,7 +5,7 @@ NORI_NAMESPACE_BEGIN
 
 class WhittedIntegrator : public Integrator {
 public:
-    NormalIntegrator(const PropertyList &props) {
+	WhittedIntegrator(const PropertyList &props) {
         /* No parameters this time */
     }
 
@@ -15,8 +15,17 @@ public:
         if (!scene->rayIntersect(ray, its))
             return Color3f(0.0f);
 
-        /* Return the component-wise absolute
-           value of the shading normal as a color */
+		// sample area light
+		if (!its.mesh->isEmitter())
+		{
+			//scene->EEmitter;
+			//Point3f y;
+			//Normal3f ny;
+			//its.mesh->samplePosition(, y, ny);
+			//float fr = its.mesh->getBSDF()->eval();
+			//float G = ;
+			//float Le = ;
+		}
         Normal3f n = its.shFrame.n.cwiseAbs();
         return Color3f(n.x(), n.y(), n.z());
     }
