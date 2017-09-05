@@ -1,5 +1,6 @@
 #include <nori/integrator.h>
 #include <nori/scene.h>
+#include <nori/bsdf.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -19,12 +20,18 @@ public:
 		if (!its.mesh->isEmitter())
 		{
 			//scene->EEmitter;
-			//Point3f y;
-			//Normal3f ny;
-			//its.mesh->samplePosition(, y, ny);
-			//float fr = its.mesh->getBSDF()->eval();
+			Point3f y;
+			Normal3f ny;
+			float eta1 = (float)rand() / RAND_MAX;
+			float eta2 = (float)rand() / RAND_MAX;
+			its.mesh->samplePosition(Point2f(eta1, eta2), y, ny);
+			Vector3f wi = y - its.p;
+			wi /= wi.norm();
+			BSDFQueryRecord rec(its.shFrame.toLocal(wi), its.shFrame.toLocal(-ray.d), ESolidAngle);
+			Color3f fr = its.mesh->getBSDF()->eval(rec);
 			//float G = ;
 			//float Le = ;
+			return fr;
 		}
         Normal3f n = its.shFrame.n.cwiseAbs();
         return Color3f(n.x(), n.y(), n.z());
